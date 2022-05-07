@@ -276,3 +276,7 @@ pnpm-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+/api/db/data/
+/api/.env
+/db/example.js
+/db/data/
