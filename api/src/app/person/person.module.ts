@@ -6,9 +6,9 @@ import { PersonService } from './person.service';
 import { PersonResolver } from './person.resolver';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: Person.name, schema: PersonSchema }]),
-    ],
-    providers: [PersonService, PersonResolver],
+  imports: [
+    MongooseModule.forFeature([{ name: Person.name, schema: PersonSchema }]),
+  ],
+  providers: [PersonService, PersonResolver],
 })
 export class PersonModule {}

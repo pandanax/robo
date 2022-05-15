@@ -7,16 +7,16 @@ import { Hobby } from '../hobby/hobby.model';
 @ObjectType()
 @Schema()
 export class Person {
-    @Field(() => String)
-    _id: MongooseSchema.Types.ObjectId;
+  @Field(() => String)
+  _id: MongooseSchema.Types.ObjectId;
 
-    @Field(() => String)
-    @Prop()
-    name: string;
+  @Field(() => String)
+  @Prop()
+  name: string;
 
-    @Field(() => [Hobby])
-    @Prop({ type: [MongooseSchema.Types.ObjectId], ref: Hobby.name })
-    hobbies: MongooseSchema.Types.ObjectId[] | Hobby[];
+  @Field(() => [Hobby])
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: Hobby.name })
+  hobbies: MongooseSchema.Types.ObjectId[] | Hobby[];
 }
 
 export type PersonDocument = Person & Document;
