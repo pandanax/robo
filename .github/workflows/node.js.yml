@@ -27,10 +27,10 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
-      working-directory: ./api
+      working-directory: api
     - run: npm run build --if-present
-      working-directory: ./api
+      working-directory: api
     - run: npm runt test
-      working-directory: ./api
+      working-directory: api
     - run: npm runt lint
-      working-directory: ./api
+      working-directory: api
