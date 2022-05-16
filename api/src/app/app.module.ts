@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { BinanceModule } from './binance/binance.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     HobbyModule,
     AuthModule,
     UsersModule,
+    BinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
