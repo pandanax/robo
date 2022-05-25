@@ -20,6 +20,42 @@ input CreatePersonInput {
   name: String!
 }
 
+type GqlExchangeFilter {
+  filterType: String!
+  maxNumAlgoOrders: Float
+  maxNumOrders: Float
+}
+
+type GqlExchangeInfo {
+  exchangeFilters: [GqlExchangeFilter!]!
+  rateLimits: [GqlRateLimiter!]!
+  serverTime: Float!
+  symbols: [GqlSymbolExchangeInfo!]!
+  timezone: String!
+}
+
+type GqlRateLimiter {
+  interval: String!
+  intervalNum: Float!
+  limit: Float!
+  rateLimitType: String!
+}
+
+type GqlSymbolExchangeInfo {
+  baseAsset: String!
+  baseAssetPrecision: Float!
+  filters: String!
+  icebergAllowed: Boolean!
+  isMarginTradingAllowed: Boolean!
+  isSpotTradingAllowed: Boolean!
+  ocoAllowed: Boolean!
+  orderTypes: [String!]!
+  quoteAsset: String!
+  quoteAssetPrecision: Float!
+  status: String!
+  symbol: String!
+}
+
 type Hobby {
   _id: String!
   name: String!
@@ -54,6 +90,7 @@ type Person {
 }
 
 type Query {
+  getExchangeInfo: GqlExchangeInfo!
   hobbies(filters: ListHobbyInput): [Hobby!]!
   hobby(_id: String!): Hobby!
   person(_id: String!): Person!
