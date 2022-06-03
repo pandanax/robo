@@ -7,3 +7,4 @@ export const mapSymbols = (r: ExchangeInfo) => ({
         filters: JSON.stringify(s.filters)
     }))
 })
+

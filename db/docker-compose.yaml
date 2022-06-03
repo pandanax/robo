@@ -11,7 +11,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
       MONGO_INITDB_DATABASE: robo
     networks:
-      - backend
+      - db-mongo
     volumes:
       - ./data:/data/db
 #      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -30,11 +30,27 @@ services:
     links:
       - mongodb
     networks:
-      - backend
+      - db-mongo
       - frontend-db-manager
+
+  elasticsearch:
+    image: elasticsearch:7.5.2
+    container_name: elasticsearch
+    restart: unless-stopped
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - ./data-elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - db-elastic
 
 networks:
   frontend-db-manager:
     driver: bridge
-  backend:
+  db-mongo:
+    driver: bridge
+  db-elastic:
     driver: bridge

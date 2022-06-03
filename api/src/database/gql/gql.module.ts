@@ -11,6 +11,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
       playground: true,
       debug: false,
       driver: ApolloDriver,
+      installSubscriptionHandlers: true,
     }),
   ],
 })

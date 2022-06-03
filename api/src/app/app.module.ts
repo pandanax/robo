@@ -10,18 +10,21 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { BinanceModule } from './binance/binance.module';
+import {SearchModule} from './search/search.module';
 
 @Module({
   imports: [
     //database
     MongoModule,
     GqlModule,
-    //entities
+    SearchModule,
+    //external API
+    BinanceModule,
+    //internal Modules
     PersonModule,
     HobbyModule,
     AuthModule,
     UsersModule,
-    BinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

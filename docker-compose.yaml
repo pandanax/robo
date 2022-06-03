@@ -34,7 +34,10 @@ services:
       - 3000:3000
     environment:
       DB_CONN_STRING: "mongodb://robo:p2icalintu@mongo:27017/robo"
-      JWT_SECRET: aa823cd8Js.(xc
+      JWT_SECRET: "aa823cd8Js.(xc"
+      BINANCE_API_KEY: "3iiYaWO7SA4iGLkQTWbpFfhJ9riJlXEF9yulMO3qt8pq5HFwOitNtdHbyWJ3CFPn"
+      BINANCE_API_SECRET: "JExC73w94q3Kg3D9vsJpe3kWmnwo76XzkrxAoQyMuFnWGClicnkBNXnTc2WEnsZx"
+      SEARCH_DB_CONN_STRING: "http://127.0.0.1:9200"
 
     links:
       - mongo

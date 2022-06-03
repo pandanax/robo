@@ -280,3 +280,4 @@ pnpm-debug.log*
 /api/.env
 /db/example.js
 /db/data/
+/db/data-elasticsearch/

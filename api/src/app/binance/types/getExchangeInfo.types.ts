@@ -65,3 +65,10 @@ export class GqlExchangeInfo {
     @Field(() => [GqlSymbolExchangeInfo])
     symbols: SymbolExchangeInfo[]
 }
+
+@ObjectType()
+export class UniversalResponse {
+    @Field(() => Number)
+    statusCode: number
+}
+

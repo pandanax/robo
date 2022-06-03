@@ -11,6 +11,27 @@ input AuthInput {
   password: String!
 }
 
+type Candle {
+  close: Float!
+  closeTime: Float!
+  high: Float!
+  interval: String!
+  low: Float!
+  open: Float!
+  openTime: Float!
+  symbol: String!
+  volume: Float!
+}
+
+input CandleInput {
+  interval: String!
+  symbol: String!
+}
+
+type Candles {
+  items: [Candle!]!
+}
+
 input CreateHobbyInput {
   name: String!
 }
@@ -79,6 +100,7 @@ type Mutation {
   deletePerson(_id: String!): Person!
   login(payload: AuthInput!): Auth!
   register(payload: RegisterUserInput!): User!
+  storeCandles(payload: CandleInput!): UniversalResponse!
   updateHobby(payload: UpdateHobbyInput!): Hobby!
   updatePerson(payload: UpdatePersonInput!): Person!
 }
@@ -90,6 +112,7 @@ type Person {
 }
 
 type Query {
+  getCandles(payload: CandleInput!): Candles!
   getExchangeInfo: GqlExchangeInfo!
   hobbies(filters: ListHobbyInput): [Hobby!]!
   hobby(_id: String!): Hobby!
@@ -103,6 +126,42 @@ input RegisterUserInput {
   firstName: String!
   lastName: String!
   password: String!
+}
+
+type SpotSymbolTicker {
+  baseAssetVolume: Float!
+  bestAskPrice: Float!
+  bestAskQuantity: Float!
+  bestBid: Float!
+  bestBidQuantity: Float!
+  closeQuantity: Float!
+  closeTime: Float!
+  currentClose: Float!
+  eventTime: Float!
+  eventType: String!
+  firstTradeId: Float!
+  high: Float!
+  lastTradeId: Float!
+  low: Float!
+  open: Float!
+  openTime: Float!
+  previousClose: Float!
+  priceChange: Float!
+  priceChangePercent: Float!
+  quoteAssetVolume: Float!
+  symbol: String!
+  trades: Float!
+  weightedAveragePrice: Float!
+  wsKey: String!
+  wsMarket: String!
+}
+
+type Subscription {
+  subscribeSpotSymbol24hrTicker: SpotSymbolTicker!
+}
+
+type UniversalResponse {
+  statusCode: Float!
 }
 
 input UpdateHobbyInput {
