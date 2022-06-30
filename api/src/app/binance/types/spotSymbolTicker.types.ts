@@ -1,5 +1,12 @@
 import {Field, ObjectType} from '@nestjs/graphql';
 
+
+@ObjectType()
+export class CollectTickersData {
+    @Field(() => String)
+    result: string
+}
+
 @ObjectType()
 export class SpotSymbolTicker {
     @Field(() => String)

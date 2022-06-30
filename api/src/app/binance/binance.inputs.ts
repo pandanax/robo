@@ -8,4 +8,10 @@ export class CandleInput {
 
 @Field(() => String)
     interval: KlineInterval;
+
+@Field(() => String)
+    dateFrom: string;
+
+@Field(() => String)
+    dateTo: string;
 }

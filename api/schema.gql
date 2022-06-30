@@ -24,12 +24,18 @@ type Candle {
 }
 
 input CandleInput {
+  dateFrom: String!
+  dateTo: String!
   interval: String!
   symbol: String!
 }
 
 type Candles {
   items: [Candle!]!
+}
+
+type CollectTickersData {
+  result: String!
 }
 
 input CreateHobbyInput {
@@ -100,7 +106,6 @@ type Mutation {
   deletePerson(_id: String!): Person!
   login(payload: AuthInput!): Auth!
   register(payload: RegisterUserInput!): User!
-  storeCandles(payload: CandleInput!): UniversalResponse!
   updateHobby(payload: UpdateHobbyInput!): Hobby!
   updatePerson(payload: UpdatePersonInput!): Person!
 }
@@ -157,11 +162,8 @@ type SpotSymbolTicker {
 }
 
 type Subscription {
+  subscribeCollectTickersData(payload: CandleInput!): CollectTickersData!
   subscribeSpotSymbol24hrTicker: SpotSymbolTicker!
-}
-
-type UniversalResponse {
-  statusCode: Float!
 }
 
 input UpdateHobbyInput {

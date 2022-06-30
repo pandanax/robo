@@ -5,6 +5,8 @@ interface SearchDocument {
     index?: string,
     globalIndex?: string,
     symbol?: string,
+    openTimeFrom?: number,
+    openTimeTo?: number,
 }
 
 @Injectable()
@@ -18,13 +20,19 @@ export class SearchService {
         })
 
     }
-    search({index, symbol}: SearchDocument) {
+    search({index, symbol, openTimeFrom, openTimeTo}: SearchDocument) {
         return this.client.search({
             index,
             body: {
                 query: {
-                    match: {
-                        symbol
+                    /*match: {
+                        symbol,
+                    },*/
+                    range: {
+                        openTime : {
+                            gte : openTimeFrom,
+                            lte : openTimeTo
+                        }
                     }
                 }
             }
