@@ -2,9 +2,12 @@ import {Field, ObjectType} from '@nestjs/graphql';
 
 
 @ObjectType()
-export class CollectTickersData {
+
+export class UniversalBulkResponse {
+    @Field(() => Number)
+    statusCode: boolean
     @Field(() => String)
-    result: string
+    message?: string
 }
 
 @ObjectType()
@@ -64,10 +67,12 @@ export class SpotSymbolTicker {
 @ObjectType()
 export class Candle {
     @Field(() => String)
+    id: string
+    @Field(() => String)
     symbol: string
     @Field(() => String)
     interval: string
-    @Field(() => Number)
+    @Field(() => String)
     openTime: number
     @Field(() => Number)
     high: number
@@ -79,7 +84,7 @@ export class Candle {
     close: number
     @Field(() => Number)
     volume: number
-    @Field(() => Number)
+    @Field(() => String)
     closeTime: number
 }
 

@@ -18,3 +18,4 @@ export const makeSpotSymbolTickerGlobalIndex = (
     }: SpotSymbolTicker | ExtendedSpotOrder) => `${wsMarket}_${eventType}_${symbol}`.toLowerCase()
 
 export const makeSymbolTickerIndex = ({symbol, interval}) => `${symbol}_${interval}`.toLowerCase();
+export const makeCandleId = ({symbol, interval, openTime}) => `${symbol}_${interval}_${openTime}`.toLowerCase();

@@ -70,5 +70,7 @@ export class GqlExchangeInfo {
 export class UniversalResponse {
     @Field(() => Number)
     statusCode: number
+    @Field(() => String)
+    message: string
 }
 

@@ -281,3 +281,5 @@ pnpm-debug.log*
 /db/example.js
 /db/data/
 /db/data-elasticsearch/
+/db/mongo-init.js
+/db/elastic-data/

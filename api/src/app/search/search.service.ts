@@ -1,42 +1,47 @@
-import { Injectable } from '@nestjs/common';
 import {ElasticsearchService} from '@nestjs/elasticsearch';
-
-interface SearchDocument {
-    index?: string,
-    globalIndex?: string,
-    symbol?: string,
-    openTimeFrom?: number,
-    openTimeTo?: number,
-}
+import {Injectable} from '@nestjs/common';
+import {CandleInput} from '../binance/binance.inputs';
+import {IndicesRefreshRequest} from '@elastic/elasticsearch/lib/api/types';
+import * as dayjs from 'dayjs';
+import {makeSymbolTickerIndex} from '../binance/helpers/spotSymbolTicker.helper';
+import {ICandleRequest, ISymbolInterval} from '../binance/types/candle.types';
 
 @Injectable()
 export class SearchService {
-    constructor(private readonly client: ElasticsearchService) {}
-    index(body) {
-
-        return this.client.bulk({
-            refresh: true,
-            body,
-        })
-
+    constructor(private readonly elasticsearchService: ElasticsearchService) {}
+    async index(p) {
+        return this.elasticsearchService.index(p);
     }
-    search({index, symbol, openTimeFrom, openTimeTo}: SearchDocument) {
-        return this.client.search({
+
+    async indicesRefresh(p: IndicesRefreshRequest) {
+        return this.elasticsearchService.indices.refresh(p);
+    }
+
+    async searchCandles({symbol, interval, dateFrom, dateTo}: ICandleRequest) {
+        const index = makeSymbolTickerIndex({symbol, interval});
+        return this.elasticsearchService.search({
             index,
-            body: {
-                query: {
-                    /*match: {
-                        symbol,
-                    },*/
-                    range: {
-                        openTime : {
-                            gte : openTimeFrom,
-                            lte : openTimeTo
-                        }
+            from : 0,
+            size : 1000,
+            query: {
+                range: {
+                    openTime: {
+                        gte: dayjs(dateFrom).valueOf(),
+                        lte: dayjs(dateTo).valueOf(),
                     }
                 }
             }
-        })
+        });
+    }
+
+    async deleteByQuery({symbol, interval}: ISymbolInterval) {
+        const index = makeSymbolTickerIndex({symbol, interval});
+        return this.elasticsearchService.deleteByQuery({
+            index,
+            query: {
+                match_all: {}
+            }
+        }, {});
     }
 
 }

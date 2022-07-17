@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import {ElasticsearchModule, ElasticsearchService} from '@nestjs/elasticsearch';
+import {ElasticsearchModule} from '@nestjs/elasticsearch';
 import 'dotenv/config';
 import {SearchService} from './search.service';
 

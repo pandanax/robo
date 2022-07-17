@@ -13,12 +13,13 @@ input AuthInput {
 
 type Candle {
   close: Float!
-  closeTime: Float!
+  closeTime: String!
   high: Float!
+  id: String!
   interval: String!
   low: Float!
   open: Float!
-  openTime: Float!
+  openTime: String!
   symbol: String!
   volume: Float!
 }
@@ -34,10 +35,6 @@ type Candles {
   items: [Candle!]!
 }
 
-type CollectTickersData {
-  result: String!
-}
-
 input CreateHobbyInput {
   name: String!
 }
@@ -47,39 +44,8 @@ input CreatePersonInput {
   name: String!
 }
 
-type GqlExchangeFilter {
-  filterType: String!
-  maxNumAlgoOrders: Float
-  maxNumOrders: Float
-}
-
-type GqlExchangeInfo {
-  exchangeFilters: [GqlExchangeFilter!]!
-  rateLimits: [GqlRateLimiter!]!
-  serverTime: Float!
-  symbols: [GqlSymbolExchangeInfo!]!
-  timezone: String!
-}
-
-type GqlRateLimiter {
+input DeleteCandlesBulkInput {
   interval: String!
-  intervalNum: Float!
-  limit: Float!
-  rateLimitType: String!
-}
-
-type GqlSymbolExchangeInfo {
-  baseAsset: String!
-  baseAssetPrecision: Float!
-  filters: String!
-  icebergAllowed: Boolean!
-  isMarginTradingAllowed: Boolean!
-  isSpotTradingAllowed: Boolean!
-  ocoAllowed: Boolean!
-  orderTypes: [String!]!
-  quoteAsset: String!
-  quoteAssetPrecision: Float!
-  status: String!
   symbol: String!
 }
 
@@ -117,12 +83,12 @@ type Person {
 }
 
 type Query {
-  getCandles(payload: CandleInput!): Candles!
-  getExchangeInfo: GqlExchangeInfo!
+  deleteBulkCandles(payload: DeleteCandlesBulkInput!): UniversalBulkResponse!
   hobbies(filters: ListHobbyInput): [Hobby!]!
   hobby(_id: String!): Hobby!
   person(_id: String!): Person!
   persons(filters: ListPersonInput): [Person!]!
+  searchCandles(payload: CandleInput!): Candles!
   whoAmI: User!
 }
 
@@ -162,8 +128,12 @@ type SpotSymbolTicker {
 }
 
 type Subscription {
-  subscribeCollectTickersData(payload: CandleInput!): CollectTickersData!
-  subscribeSpotSymbol24hrTicker: SpotSymbolTicker!
+  subscribeCollectTickersData(payload: CandleInput!): UniversalBulkResponse!
+}
+
+type UniversalBulkResponse {
+  message: String!
+  statusCode: Float!
 }
 
 input UpdateHobbyInput {

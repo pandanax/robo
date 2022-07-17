@@ -1,5 +1,10 @@
 import * as dayjs from 'dayjs';
 import {KlineInterval} from 'binance/lib/types/shared';
+import {ICandle, ICandleRequest} from '../types/candle.types';
+import {concatMap, finalize, from} from 'rxjs';
+import {makeCandleId, makeSymbolTickerIndex} from './spotSymbolTicker.helper';
+import {PubSub} from 'graphql-subscriptions';
+import {PubSubAsyncIterator} from 'graphql-subscriptions/dist/pubsub-async-iterator';
 
 export interface DatesInput {
     dateFromInt: number,
@@ -44,7 +49,7 @@ export const getItems = ({
                              dateToInt,
                              symbol,
                              interval
-}: ItemsInput): ItemsOutputItem[] => {
+                         }: ItemsInput): ItemsOutputItem[] => {
     const dates = getDates({
         dateToInt,
         dateFromInt,
@@ -77,10 +82,19 @@ export const getDates = ({
 
     while (currentDateInt < dateToInt) {
         const newCurrentDateInt = dayjs(currentDateInt).add(1, unit).valueOf();
-        dates.push({
+        const endTime = newCurrentDateInt > dateToInt ? dateToInt : newCurrentDateInt;
+        const item = {
             startTime: currentDateInt,
-            endTime: newCurrentDateInt > dateToInt ? dateToInt : newCurrentDateInt
-        });
+            endTime: endTime - 1,
+        }
+        dates.push(item);
+
+
+            console.log(dayjs(item.startTime).toISOString())
+            console.log(dayjs(item.endTime).toISOString())
+            console.log('-----')
+
+
         currentDateInt = newCurrentDateInt;
     }
 
@@ -90,7 +104,7 @@ export const getDates = ({
 export const prepareCandles = (candlesRaw: any[][], {
     symbol,
     interval,
-}: CandlesInput) => {
+}: CandlesInput): ICandle[] => {
     return candlesRaw.map((
         [
             openTime,
@@ -107,16 +121,33 @@ export const prepareCandles = (candlesRaw: any[][], {
         ]) => ({
         symbol,
         interval,
-        openTime,
+        openTime: dayjs(openTime).valueOf(),
         open: parseFloat(open),
         high: parseFloat(high),
         low: parseFloat(low),
         close: parseFloat(close),
         volume: parseFloat(volume),
-        closeTime,
+        closeTime: dayjs(closeTime).valueOf(),
         quoteAssetVolume,
         numberOfTrades,
         takerBuyBaseAssetVolume,
         takerBuyQuoteAssetVolume,
-    }));
+    } as ICandle));
+}
+
+export const makeCollectCandlesResult = async (candles: ICandle[], promises: Promise<any>[]) => {
+
+    // пишем в БД
+    const result = await Promise.all(promises);
+
+    // собираем ответку
+    const messageObj = result.reduce((acc, {result}, i) => {
+        const key = dayjs(candles[i].openTime).toISOString();
+        acc[key] = result;
+        return acc;
+    }, {});
+
+    return {
+        message: JSON.stringify(messageObj),
+    };
 }

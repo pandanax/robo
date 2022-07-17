@@ -4,57 +4,53 @@ import {PubSub} from 'graphql-subscriptions';
 import {BinanceService} from './binance.service';
 import {GqlAuthGuard} from '../auth/gql-jwt-auth.guard';
 import {CurrentUser} from '../auth/auth.decorator';
-import {GqlExchangeInfo} from './types/getExchangeInfo.types';
+import {GqlExchangeInfo, UniversalResponse} from './types/getExchangeInfo.types';
 import {mapSymbols} from './helpers/getExchangeInfo.helper';
 import {binanceWsClient} from './binance.ws.client';
-import {Candles, CollectTickersData, SpotSymbolTicker} from './types/spotSymbolTicker.types';
-import {makeSymbolTickerIndex} from './helpers/spotSymbolTicker.helper';
+import {Candles, UniversalBulkResponse, SpotSymbolTicker} from './types/spotSymbolTicker.types';
+import {makeCandleId, makeSymbolTickerIndex} from './helpers/spotSymbolTicker.helper';
 import {SearchService} from '../search/search.service';
 import * as dayjs from 'dayjs'
-import {CandleInput} from './binance.inputs';
-import {concatMap, from, map} from 'rxjs';
-import {getDates, getItems, prepareCandles} from './helpers/candles.helper';
+import {CandleIndexInput, CandleInput, DeleteCandlesBulkInput, DeleteCandlesBulkInputByIds} from './binance.inputs';
+import {concatMap, finalize, from, map, switchMap} from 'rxjs';
+import {getItems, makeCollectCandlesResult, prepareCandles} from './helpers/candles.helper';
 
 
 @Resolver()
 export class BinanceResolver {
     constructor(
         private binanceService: BinanceService,
-        private elasticSearchService: SearchService
+        private elasticsearchService: SearchService
     ) {
     }
 
     @Query(() => Candles)
-    async getCandles(@Args('payload') {symbol = 'BTCUSDT', interval = '1d', dateFrom, dateTo}: CandleInput) {
-        const index = makeSymbolTickerIndex({symbol, interval});
-        const {body} = await this.elasticSearchService.search({
-            symbol,
-            index,
-            openTimeFrom: dayjs(dateFrom).valueOf(),
-            openTimeTo: dayjs(dateTo).valueOf(),
-        });
-        return {items: body.hits.hits.map(({_source}) => _source)}
+    async searchCandles(@Args('payload') {symbol, interval, dateFrom, dateTo}: CandleInput) {
+        const result = await this.elasticsearchService.searchCandles({symbol, interval, dateFrom, dateTo});
+        return {items: result.hits.hits.map(({_source}) => _source)}
     }
 
-    @Query(() => GqlExchangeInfo)
-    @UseGuards(GqlAuthGuard)
-    getExchangeInfo(@CurrentUser() user: { userId: string }) {
-        return this.binanceService.getExchangeInfo().then(mapSymbols);
+    @Query(() => UniversalBulkResponse)
+    async deleteBulkCandles(@Args('payload') {symbol, interval}: DeleteCandlesBulkInput) {
+        const {failures, deleted} = await this.elasticsearchService.deleteByQuery({symbol, interval});
+        return {
+            message: `ERROR: ${failures.length}, SUCCESS: ${deleted}`
+        };
     }
 
-
-    @Subscription((returns) => CollectTickersData, {
+    @Subscription((returns) => UniversalBulkResponse, {
         name: 'subscribeCollectTickersData',
     })
     subscribeCollectTickersData(@Args('payload') {
-        symbol = 'BTCUSDT',
-        interval = '1d',
-        dateFrom = dayjs().subtract(1, 'day').toISOString(),
-        dateTo = dayjs().toISOString(),
+        symbol,
+        interval,
+        dateFrom,
+        dateTo,
     }: CandleInput) {
 
         // init pubSup
         const pubSub = new PubSub();
+        const iterator = pubSub.asyncIterator('subscribeCollectTickersData');
 
         // распарсим даты
         const dateFromInt = dayjs(dateFrom).valueOf();
@@ -68,82 +64,54 @@ export class BinanceResolver {
             symbol,
         })
 
-        items.forEach(item => {
-            console.log(dayjs(item.startTime).toISOString())
-            console.log(dayjs(item.endTime).toISOString())
-        });
-
         const source = from(items);
 
-        source.pipe(concatMap(async ({
-                                    symbol,
-                                    interval,
-                                    startTime,
-                                    endTime,
-                                }) => {
+        source.pipe(
+            concatMap(async ({
+                                 symbol,
+                                 interval,
+                                 startTime,
+                                 endTime,
+                             }) => {
+                // получаем свечки
+                const candlesRaw = await this.binanceService.getKlines({
+                    symbol,
+                    interval,
+                    startTime,
+                    endTime,
+                });
 
-            // свечки
-            const candlesRaw = await this.binanceService.getKlines({
-                symbol,
-                interval,
-                startTime,
-                endTime,
+                // обработанные свечки
+                const candles = prepareCandles(candlesRaw, {
+                    symbol,
+                    interval,
+                });
+
+                // собираем поштучно массив промисов для индексации
+                const promises = candles.map(document => this.elasticsearchService.index({
+                        index: makeSymbolTickerIndex({symbol, interval}),
+                        id: makeCandleId({symbol, interval, openTime: document.openTime }),
+                        document,
+                    })
+                );
+
+                return makeCollectCandlesResult(candles, promises);
+            }),
+            finalize(async () => {
+                return pubSub.publish('subscribeCollectTickersData', {
+                    'subscribeCollectTickersData': {
+                        message: 'DONE',
+                    }
+                });
+            })
+        ).subscribe(async ({message}) => {
+                await pubSub.publish('subscribeCollectTickersData', {
+                    'subscribeCollectTickersData': {
+                        message,
+                    }
+                });
             });
-
-            // обработанные свечки
-            const candles = prepareCandles(candlesRaw, {
-                symbol,
-                interval,
-            });
-
-            // индекс для БД
-            const index = makeSymbolTickerIndex({symbol, interval});
-            // тело для БД
-            const body = candles.flatMap(doc => [{index: {_index: index}}, doc])
-            // пишем в БД
-            const res = await this.elasticSearchService.index(body);
-
-            //console.log('--res', res);
-
-
-            const result = `SUCCESS ${candles.length} ${interval} ${symbol}: ${dayjs(startTime).toISOString()}-${dayjs(endTime).toISOString()}`
-
-            return result
-        })).subscribe(async (result) => {
-            const res = await result;
-            return pubSub.publish('subscribeCollectTickersData', {
-                'subscribeCollectTickersData': {
-                    result: res
-                }
-            });
-        });
-
-
-        // from(items).subscribe((item) => {
-        //     console.log('---', item)
-        //     return pubSub.publish('subscribeCollectTickersData', {'subscribeCollectTickersData': {
-        //             eventType: item,
-        //             eventTime: 1,
-        //         }});
-        // });
-        return pubSub.asyncIterator('subscribeCollectTickersData');
+        return iterator;
     }
 
-    @Subscription((returns) => SpotSymbolTicker, {
-        name: 'subscribeSpotSymbol24hrTicker',
-    })
-    subscribeSpotSymbol24hrTicker() {
-        const self = this;
-        const pubSub = new PubSub();
-
-        binanceWsClient.subscribeSpotSymbol24hrTicker('BTCUSDT');
-        binanceWsClient.on('open', (data) => {
-            console.log('connection opened open:', data.wsKey, data.ws.target.url);
-        });
-        binanceWsClient.on('formattedMessage', async (
-            data: SpotSymbolTicker) => {
-            return pubSub.publish('subscribeSpotSymbol24hrTicker', {'subscribeSpotSymbol24hrTicker': data});
-        });
-        return pubSub.asyncIterator('subscribeSpotSymbol24hrTicker');
-    }
 }
