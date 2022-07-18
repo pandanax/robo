@@ -283,3 +283,4 @@ pnpm-debug.log*
 /db/data-elasticsearch/
 /db/mongo-init.js
 /db/elastic-data/
+/db/redis-data/
