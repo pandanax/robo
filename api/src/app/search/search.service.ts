@@ -1,10 +1,9 @@
 import {ElasticsearchService} from '@nestjs/elasticsearch';
 import {Injectable} from '@nestjs/common';
-import {CandleInput} from '../binance/binance.inputs';
 import {IndicesRefreshRequest} from '@elastic/elasticsearch/lib/api/types';
 import * as dayjs from 'dayjs';
-import {makeSymbolTickerIndex} from '../binance/helpers/spotSymbolTicker.helper';
-import {ICandleRequest, ISymbolInterval} from '../binance/types/candle.types';
+import {ICandleRequest, ISymbolInterval} from '../candle/candle.types';
+import {makeSymbolTickerIndex} from '../candle/candle.constants';
 
 @Injectable()
 export class SearchService {

@@ -35,59 +35,61 @@ type Candles {
   items: [Candle!]!
 }
 
-input CreateHobbyInput {
-  name: String!
-}
-
-input CreatePersonInput {
-  hobbies: [String!]!
-  name: String!
-}
-
 input DeleteCandlesBulkInput {
   interval: String!
   symbol: String!
 }
 
-type Hobby {
-  _id: String!
-  name: String!
+type GqlExchangeFilter {
+  filterType: String!
+  maxNumAlgoOrders: Float
+  maxNumOrders: Float
 }
 
-input ListHobbyInput {
-  _id: String
-  name: String
+type GqlExchangeInfo {
+  exchangeFilters: [GqlExchangeFilter!]!
+  rateLimits: [GqlRateLimiter!]!
+  serverTime: Float!
+  symbols: [GqlSymbolExchangeInfo!]!
+  timezone: String!
 }
 
-input ListPersonInput {
-  _id: String
-  hobbies: [String!]
-  name: String
+type GqlRateLimiter {
+  interval: String!
+  intervalNum: Float!
+  limit: Float!
+  rateLimitType: String!
+}
+
+type GqlSymbolExchangeInfo {
+  baseAsset: String!
+  baseAssetPrecision: Float!
+  filters: String!
+  icebergAllowed: Boolean!
+  isMarginTradingAllowed: Boolean!
+  isSpotTradingAllowed: Boolean!
+  ocoAllowed: Boolean!
+  orderTypes: [String!]!
+  quoteAsset: String!
+  quoteAssetPrecision: Float!
+  status: String!
+  symbol: String!
+}
+
+input JobIdInput {
+  id: Float!
 }
 
 type Mutation {
-  createHobby(payload: CreateHobbyInput!): Hobby!
-  createPerson(payload: CreatePersonInput!): Person!
-  deleteHobby(_id: String!): Hobby!
-  deletePerson(_id: String!): Person!
   login(payload: AuthInput!): Auth!
   register(payload: RegisterUserInput!): User!
-  updateHobby(payload: UpdateHobbyInput!): Hobby!
-  updatePerson(payload: UpdatePersonInput!): Person!
-}
-
-type Person {
-  _id: String!
-  hobbies(populate: Boolean!): [Hobby!]!
-  name: String!
 }
 
 type Query {
+  collectTickersData(payload: CandleInput!): UniversalCandleJobResponse!
   deleteBulkCandles(payload: DeleteCandlesBulkInput!): UniversalBulkResponse!
-  hobbies(filters: ListHobbyInput): [Hobby!]!
-  hobby(_id: String!): Hobby!
-  person(_id: String!): Person!
-  persons(filters: ListPersonInput): [Person!]!
+  getExchangeInfo: GqlExchangeInfo!
+  getJobStatusCollectTickersData(payload: JobIdInput!): UniversalBulkResponse!
   searchCandles(payload: CandleInput!): Candles!
   whoAmI: User!
 }
@@ -128,23 +130,19 @@ type SpotSymbolTicker {
 }
 
 type Subscription {
-  subscribeCollectTickersData(payload: CandleInput!): UniversalBulkResponse!
+  subscribeSpotSymbol24hrTicker: SpotSymbolTicker!
 }
 
 type UniversalBulkResponse {
   message: String!
+  status: String!
   statusCode: Float!
 }
 
-input UpdateHobbyInput {
-  _id: String!
-  name: String
-}
-
-input UpdatePersonInput {
-  _id: String!
-  hobbies: [String!]
-  name: String
+type UniversalCandleJobResponse {
+  id: Float!
+  name: String!
+  timestamp: Float!
 }
 
 type User {

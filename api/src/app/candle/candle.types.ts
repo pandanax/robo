@@ -1,5 +1,4 @@
 import {KlineInterval} from 'binance/lib/types/shared';
-import {Field} from '@nestjs/graphql';
 
 export interface ICandle {
     symbol: string,
@@ -25,12 +24,35 @@ export interface ISymbolInterval {
 }
 
 export interface ICandleRequest {
-
     symbol: string
-
     interval: KlineInterval
-
     dateFrom: string
-
     dateTo: string
 }
+
+
+export interface DatesInput {
+    dateFromInt: number,
+    dateToInt: number,
+    interval: KlineInterval
+}
+
+export interface ItemsInput {
+    dateFromInt: number,
+    dateToInt: number,
+    interval: KlineInterval,
+    symbol: string,
+}
+
+export interface ItemsOutputItem {
+    symbol: string,
+    startTime: number,
+    endTime: number,
+    interval: KlineInterval,
+}
+
+export interface CandlesInput {
+    interval: KlineInterval,
+    symbol: string,
+}
+
