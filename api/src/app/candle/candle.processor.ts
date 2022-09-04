@@ -8,6 +8,7 @@ import {SearchService} from '../search/search.service';
 import {ICandleRequest} from './candle.types';
 import {CandleService} from './candle.service';
 import {makeCandleId, makeSymbolTickerIndex} from './candle.constants';
+import {DateService} from '../date/date.service';
 
 @Processor('candle')
 export class CandleProcessor {
@@ -17,6 +18,7 @@ export class CandleProcessor {
         private binanceService: BinanceService,
         private elasticsearchService: SearchService,
         private candleService: CandleService,
+        private dateService: DateService,
     ) {
     }
 
@@ -70,57 +72,75 @@ export class CandleProcessor {
 
         const elasticSearchIndex = makeSymbolTickerIndex({symbol, interval});
 
-        return new Promise((resolve, reject) => {
-            return source.pipe(
-                concatMap(async ({
-                                     symbol,
-                                     interval,
-                                     startTime,
-                                     endTime,
-                                 }) => {
+        try {
 
-                    // получаем свечки
-                    const candlesRaw = await this.binanceService.getKlines({
-                        symbol,
-                        interval,
-                        startTime,
-                        endTime,
-                    });
+            return new Promise((resolve, reject) => {
+                return source.pipe(
+                    concatMap(async ({
+                                         symbol,
+                                         interval,
+                                         startTime,
+                                         endTime,
+                                     }) => {
 
-                    // обработанные свечки
-                    const candles = this.candleService.prepareCandles(candlesRaw, {
-                        symbol,
-                        interval,
-                    });
+                        // получаем свечки
+                        const candlesRaw = await this.binanceService.getKlines({
+                            symbol,
+                            interval,
+                            startTime,
+                            endTime,
+                        });
 
-                    // собираем поштучно массив промисов для индексации
-                    const promises = candles.map(document => this.elasticsearchService.index({
+                        console.log('---candlesRaw', {
+                            symbol,
+                            interval,
+                            startTime,
+                            endTime,
+                        }, candlesRaw)
+
+                        // обработанные свечки
+                        const candles = this.candleService.prepareCandles(candlesRaw, {
+                            symbol,
+                            interval,
+                        });
+
+                        // собираем поштучно массив промисов для индексации
+                        const promises = candles.map(document => this.elasticsearchService.index({
+                                index: elasticSearchIndex,
+                                id: makeCandleId({symbol, interval, openTime: document.openTime}),
+                                document,
+                            })
+                        );
+
+                        // Пишем в эластик
+                        const results = await Promise.all(promises);
+
+                        return this.candleService.makeCollectCandlesResult(candles, results);
+                    }),
+                    finalize(async () => {
+                        const updateIndexResult = await this.elasticsearchService.indicesRefresh({
                             index: elasticSearchIndex,
-                            id: makeCandleId({symbol, interval, openTime: document.openTime}),
-                            document,
+                            allow_no_indices: false,
                         })
-                    );
 
-                    // Пишем в эластик
-                    const results = await Promise.all(promises);
+                        await this.dateService.updateDate({
+                            index: elasticSearchIndex,
+                            lastUpdate: dateTo,
+                        });
 
-                    return  this.candleService.makeCollectCandlesResult(candles, results);
-                }),
-                finalize(async () => {
-                    const updateIndexResult = await this.elasticsearchService.indicesRefresh({
-                        index: elasticSearchIndex,
-                        allow_no_indices: false,
+                        return resolve({updateIndexResult});
+                    }),
+                    catchError((err: any) => {
+                        reject(err);
+                        return EMPTY;
                     })
-                    return resolve({updateIndexResult});
-                }),
-                catchError((err: any) => {
-                    reject(err);
-                    return EMPTY;
+                ).subscribe((r) => {
+                    this.logger.debug(r);
                 })
-            ).subscribe((r) => {
-                this.logger.debug(r);
             })
-        })
+        } catch (e) {
+            return e;
+        }
     }
 
 }

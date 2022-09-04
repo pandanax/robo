@@ -17,9 +17,8 @@ export class CandleInput {
     dateTo: string;
 }
 
-
 @InputType()
-export class DeleteCandlesBulkInput {
+export class CandleIndexInput {
 
     @Field(() => String)
     interval: KlineInterval;

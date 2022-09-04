@@ -24,6 +24,11 @@ type Candle {
   volume: Float!
 }
 
+input CandleIndexInput {
+  interval: String!
+  symbol: String!
+}
+
 input CandleInput {
   dateFrom: String!
   dateTo: String!
@@ -33,11 +38,6 @@ input CandleInput {
 
 type Candles {
   items: [Candle!]!
-}
-
-input DeleteCandlesBulkInput {
-  interval: String!
-  symbol: String!
 }
 
 type GqlExchangeFilter {
@@ -87,10 +87,13 @@ type Mutation {
 
 type Query {
   collectTickersData(payload: CandleInput!): UniversalCandleJobResponse!
-  deleteBulkCandles(payload: DeleteCandlesBulkInput!): UniversalBulkResponse!
+  deleteBulkCandles(payload: CandleIndexInput!): UniversalResponse!
   getExchangeInfo: GqlExchangeInfo!
-  getJobStatusCollectTickersData(payload: JobIdInput!): UniversalBulkResponse!
+  getJobStatusCollectTickersData(payload: JobIdInput!): UniversalResponse!
+  indexCandles(payload: CandleInput!): Candles!
+  scheduleAllCandleJobs: UniversalResponse!
   searchCandles(payload: CandleInput!): Candles!
+  updateCandleIndices: UniversalResponse!
   whoAmI: User!
 }
 
@@ -133,16 +136,16 @@ type Subscription {
   subscribeSpotSymbol24hrTicker: SpotSymbolTicker!
 }
 
-type UniversalBulkResponse {
-  message: String!
-  status: String!
-  statusCode: Float!
-}
-
 type UniversalCandleJobResponse {
   id: Float!
   name: String!
   timestamp: Float!
+}
+
+type UniversalResponse {
+  message: String!
+  status: String!
+  statusCode: Float!
 }
 
 type User {

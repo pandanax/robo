@@ -11,6 +11,7 @@ import { BinanceModule } from './binance/binance.module';
 import { SearchModule } from './search/search.module';
 import { BullModule } from './bull/bull.module';
 import { CandleModule } from './candle/candle.module';
+import { DateModule } from './date/date.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CandleModule } from './candle/candle.module';
     AuthModule,
     UsersModule,
     CandleModule,
+    DateModule,
   ],
   controllers: [AppController],
   providers: [AppService],

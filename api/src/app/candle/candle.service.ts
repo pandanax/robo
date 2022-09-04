@@ -3,13 +3,60 @@ import {InjectQueue} from '@nestjs/bull';
 import Bull, {Queue} from 'bull';
 import {CandlesInput, DatesInput, ICandle, ICandleRequest, ItemsInput, ItemsOutputItem} from './candle.types';
 import * as dayjs from 'dayjs';
-import {UniversalBulkResponse} from '../app.outputs';
-import {MAP_SYMBOLS} from './candle.constants';
+import {UniversalResponse} from '../app.outputs';
+import {makeSymbolTickerIndex, MAP_SYMBOLS} from './candle.constants';
 
 @Injectable()
 export class CandleService {
     private readonly logger = new Logger(CandleService.name)
     constructor(@InjectQueue('candle') private readonly candleQueue: Queue) {
+    }
+
+    getSymbols() {
+        return [
+            'BTCUSDT',
+            'ETHUSDT',
+            'BNBUSDT',
+        ];
+    };
+
+    getIntervals() {
+        return [
+            '1m',
+            '3m',
+            '5m',
+            '15m',
+            '30m',
+            '1h',
+            '2h',
+            '4h',
+            '6h',
+            '8h',
+            '12h',
+            '1d',
+            '3d',
+            '1w',
+            '1M',
+        ];
+    }
+
+    getGlobalStartDate() {
+        return dayjs('2017-01-01T00:00:00Z').valueOf();
+    }
+
+    getIndices() {
+        const symbols = this.getSymbols();
+        const intervals = this.getIntervals();
+        const indexes = [];
+
+        symbols.forEach(symbol => {
+            intervals.forEach(async interval => {
+                const index = makeSymbolTickerIndex({symbol, interval});
+                indexes.push({index});
+            })
+        });
+
+        return indexes;
     }
 
     async addCollectCandlesJob({
@@ -123,7 +170,7 @@ export class CandleService {
         } as ICandle));
     }
 
-    async makeCollectCandlesResult(candles: ICandle[], results: {result: string}[]): Promise<UniversalBulkResponse> {
+    async makeCollectCandlesResult(candles: ICandle[], results: {result: string}[]): Promise<UniversalResponse> {
         // собираем ответку
         const messageObj = results.reduce((acc, {result}, i) => {
             const candleDate = dayjs(candles[i].openTime).toISOString();

@@ -10,8 +10,14 @@ export class BinanceService {
         return binanceClient.getExchangeInfo()
     }
 
-    getKlines({symbol, interval, startTime, endTime, limit}: KlinesParams): Promise<Array<Array<any>>> {
-        return binanceClient.getKlines({symbol, interval, startTime, endTime, limit});
+    async getKlines({symbol, interval, startTime, endTime, limit}: KlinesParams): Promise<Array<Array<any>>> {
+        let res;
+        try {
+             res = await binanceClient.getKlines({symbol, interval, startTime, endTime, limit});
+        } catch (e) {
+            console.log('errr', e)
+        }
+        return res
     }
 
     mapSymbols(r: ExchangeInfo) {

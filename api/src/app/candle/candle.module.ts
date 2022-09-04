@@ -5,6 +5,7 @@ import {CandleProcessor} from './candle.processor';
 import {BinanceModule} from '../binance/binance.module';
 import {SearchModule} from '../search/search.module';
 import { CandleResolver } from './candle.resolver';
+import {DateModule} from '../date/date.module';
 
 @Module({
     imports: [
@@ -12,7 +13,8 @@ import { CandleResolver } from './candle.resolver';
             name: 'candle',
         }),
         BinanceModule,
-        SearchModule
+        SearchModule,
+        DateModule,
     ],
     providers: [CandleService, CandleProcessor, CandleResolver],
     exports: [CandleService],
